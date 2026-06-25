@@ -1,0 +1,16 @@
+{
+  "name": "Control de Canales ESP32",
+  "short_name": "Control ESP32",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f7f6",
+  "theme_color": "#2c3e50",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/564/564419.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

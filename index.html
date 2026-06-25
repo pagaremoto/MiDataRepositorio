@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de LEDs - Firebase</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2c3e50">
+    <style>
+        :root {
+            --bg-color: #2c3e50;
+            --card-bg: #2c3e50;
+            --text-color: #ffffff;
+            --verde: #2ecc71;
+            --rojo: #e74c3c;
+        }
+
+        body {
+            font-family: sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            padding-top: 40px;
+        }
+
+        .container {
+            text-align: center;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+            width: 85%;
+            max-width: 350px;
+        }
+
+        h1 {
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-size: 24px;
+            color: white;
+        }
+
+        /* Botón circular */
+        #btn {
+            display: inline-block;
+            text-decoration: none;
+            background: var(--verde);
+            color: white;
+            font-weight: bold;
+            font-size: 42px;
+            width: 140px;
+            height: 140px;
+            line-height: 140px;
+            border-radius: 50%;
+            text-align: center;
+            box-shadow: 0px 0px 0px 8px var(--verde);
+            border: 2px solid rgba(255,255,255,0.5);
+            transition: all 0.4s ease;
+            cursor: pointer;
+        }
+
+        #btn:hover {
+            transform: scale(1.05);
+        }
+
+        #btn.off {
+            background: var(--rojo);
+            box-shadow: 0px 0px 0px 8px var(--rojo);
+        }
+
+        /* Texto de estado */
+        #estadoTexto {
+            margin-top: 30px;
+            font-size: 22px;
+            font-weight: bold;
+            min-height: 30px;
+        }
+
+        .encendido {
+            color: var(--rojo);
+        }
+
+        .apagado {
+            color: var(--verde);
+        }
+
+        @media (max-width: 480px) {
+            #btn {
+                width: 120px;
+                height: 120px;
+                line-height: 120px;
+                font-size: 36px;
+            }
+
+            #estadoTexto {
+                font-size: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Control Jardín Híbrido</h1>
+        
+        <a id="btn" class="off" onclick="toggleRelay()">OFF</a>
+
+        <div id="estadoTexto" class="apagado">
+            ENCENDIDO
+        </div>
+    </div>
+
+    <script>
+        // URL unificada de Firebase REST API
+        const FIREBASE_URL = 'https://esp32-conexiones-default-rtdb.firebaseio.com/control/jardin/hibrido.json?auth=MVqE4OIpVsE0D7ohXpVNdtIsqDdWzoYTc2mmqYqA';
+
+        let isOn = false;
+
+        // Función que se ejecuta al pulsar el botón
+        function toggleRelay() {
+            isOn = !isOn;
+            actualizarInterfaz(isOn);
+
+            const valor = isOn ? 1 : 0;
+
+            fetch(FIREBASE_URL, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(valor)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("✅ Estado enviado a Firebase:", valor);
+            })
+            .catch(error => {
+                console.error("❌ Error al enviar a Firebase:", error);
+            });
+        }
+
+        // Modifica los estilos y textos de la interfaz según el estado
+        function actualizarInterfaz(status) {
+            const btn = document.getElementById("btn");
+            const texto = document.getElementById("estadoTexto");
+
+            if (status) {
+                btn.innerText = "ON";
+                btn.className = ""; // Quita la clase 'off' (pasa a verde)
+
+                texto.innerText = "APAGADO"; // Mantiene tu lógica inversa de relés
+                texto.className = "encendido";
+            } else {
+                btn.innerText = "OFF";
+                btn.className = "off"; // Añade la clase 'off' (pasa a rojo)
+
+                texto.innerText = "ENCENDIDO"; // Mantiene tu lógica inversa de relés
+                texto.className = "apagado";
+            }
+        }
+
+        // 🔄 LEER EL ESTADO REAL DE FIREBASE AL ABRIR LA PÁGINA
+        function checkActualStatus() {
+            fetch(FIREBASE_URL)
+            .then(response => response.json())
+            .then(data => {
+                // Si el nodo de Firebase es 1, interpretamos que está encendido
+                if (data === 1) {
+                    isOn = true;
+                } else {
+                    isOn = false;
+                }
+                actualizarInterfaz(isOn);
+                console.log(" Sincronización inicial con Firebase completa. Estado:", isOn);
+            })
+            .catch(error => {
+                console.error("⚠️ No se pudo obtener el estado inicial de Firebase:", error);
+            });
+        }
+
+        // Ejecutar la sincronización en cuanto cargue la web
+        window.onload = checkActualStatus;
+    </script>
+</body>
+</html>
