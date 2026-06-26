@@ -185,5 +185,11 @@
         // Ejecutar la sincronización en cuanto cargue la web
         window.onload = checkActualStatus;
     </script>
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/MiDataRepositorio/sw.js");
+}
+</script>
+
 </body>
 </html>
